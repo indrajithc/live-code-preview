@@ -21,11 +21,6 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css"
     />
     <style>
-      html,
-      body {
-        height: 99vh;
-        overflow: hidden;
-      }
       body.dark-mode {
         background-color: #121212;
         color: #ffffff;
@@ -96,6 +91,23 @@
                 >
                   <i class="fas fa-expand"></i> Full Screen
                 </button>
+                      <!-- Copy Options -->
+                  <div class="mt-3" style="position: absolute; bottom: 0; left: 0; right: 0;">
+                    <button class="btn btn-outline-primary" id="copyBodyHtml">
+                      <i class="fas fa-copy"></i> Copy Body HTML
+                    </button>
+                    <button class="btn btn-outline-primary" id="copyJsScripts">
+                      <i class="fas fa-copy"></i> Copy JavaScript
+                    </button>
+                    <button class="btn btn-outline-primary" id="copyCss">
+                      <i class="fas fa-copy"></i> Copy CSS
+                    </button>
+                    <button class="btn btn-outline-primary" id="copyAllBodyContent">
+                      <i class="fas fa-copy"></i> Copy All Body Content
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -262,7 +274,66 @@
           $("#preview-container").toggleClass("fullscreen");
         });
 
+
+
+        const copyToClipboard = (text) => {
+          const tempInput = document.createElement("textarea");
+          console.log({ text})
+          document.body.appendChild(tempInput);
+          tempInput.value = text;
+          tempInput.select();
+          document.execCommand("copy");
+          document.body.removeChild(tempInput);
+          alert("Copied to clipboard!");
+        };
+
+        // Copy Body HTML
+        $("#copyBodyHtml").on("click", function () {
+          const iframeDoc = $("#preview")[0].contentDocument;
+          const bodyHtml = iframeDoc.body.innerHTML;
+          copyToClipboard(bodyHtml);
+        });
+
+        // Copy JavaScript
+        $("#copyJsScripts").on("click", function () {
+          const iframeDoc = $("#preview")[0].contentDocument;
+          const scripts = Array.from(iframeDoc.scripts)
+            .map((script) => script.outerHTML)
+            .join("\n");
+          copyToClipboard(scripts);
+        });
+
+        // Copy CSS
+        $("#copyCss").on("click", function () {
+          const iframeDoc = $("#preview")[0].contentDocument;
+          const styles = Array.from(iframeDoc.styleSheets)
+            .map((styleSheet) => {
+              try {
+                return Array.from(styleSheet.cssRules)
+                  .map((rule) => rule.cssText)
+                  .join("\n");
+              } catch (e) {
+                return "";
+              }
+            })
+            .join("\n");
+          copyToClipboard(styles);
+        });
+
+        // Copy All Body Content
+        $("#copyAllBodyContent").on("click", function () {
+          const iframeDoc = $("#preview")[0].contentDocument;
+          const bodyContent = iframeDoc.body.outerHTML;
+          copyToClipboard(bodyContent);
+        });
+
+
+
         loadPreferences();
+
+
+
+        
       });
     </script>
   </body>
