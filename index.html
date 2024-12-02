@@ -102,7 +102,7 @@
                     <button class="btn btn-outline-primary" id="copyCss">
                       <i class="fas fa-copy"></i> Copy CSS
                     </button>
-                    <button class="btn btn-outline-primary" id="copyAllBodyContent">
+                    <button class="btn btn-outline-primary d-none" id="copyAllBodyContent">
                       <i class="fas fa-copy"></i> Copy All Body Content
                     </button>
                   </div>
@@ -156,6 +156,24 @@
       <button class="btn btn-primary w-100" id="saveDefault">
         <i class="fas fa-save"></i> Save Default Content
       </button>
+    </div>
+
+
+    <div class="modal fade" id="contentModal" tabindex="-1" aria-labelledby="contentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="contentModalLabel">Content Preview</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <pre id="modalContent" class="p-3 bg-light text-dark"></pre>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -275,65 +293,66 @@
         });
 
 
+        const extractContent = () => {
+          const iframe = document.getElementById("preview");
+          const doc =
+           ( iframe.contentDocument || iframe.contentWindow.document)?.body;
 
-        const copyToClipboard = (text) => {
-          const tempInput = document.createElement("textarea");
-          console.log({ text})
-          document.body.appendChild(tempInput);
-          tempInput.value = text;
-          tempInput.select();
-          document.execCommand("copy");
-          document.body.removeChild(tempInput);
-          alert("Copied to clipboard!");
+          // Extract JavaScript from <script> tags
+          const scripts = Array.from(doc.querySelectorAll("script"))
+            .map((script) => script.innerHTML)
+            .join("\n");
+
+          // Extract inline CSS from <style> tags
+          const styles = Array.from(doc.querySelectorAll("style"))
+            .map((style) => style.innerHTML)
+            .join("\n");
+
+            const clonedDoc = doc.cloneNode(true);
+
+            // Remove all <style> tags
+            clonedDoc.querySelectorAll("style").forEach((el) => el.remove());
+
+            // Remove all <script> tags
+            clonedDoc.querySelectorAll("script").forEach((el) => el.remove());
+
+            // Remove all <link> tags with rel="stylesheet"
+            clonedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((el) => el.remove());
+
+            // Return the cleaned HTML as a string
+            const html = clonedDoc.innerHTML;
+ 
+ 
+          return { html, styles, linkedStyles, scripts };
         };
 
-        // Copy Body HTML
+        // Function to display extracted content
+        const showModal = (title, content) => {
+          const modal = document.getElementById("contentModal");
+          modal.querySelector(".modal-title").innerText = title;
+          modal.querySelector(".modal-body pre").innerText = content;
+          const bootstrapModal = new bootstrap.Modal(modal);
+          bootstrapModal.show();
+        };
+
+        // Event listeners for buttons
         $("#copyBodyHtml").on("click", function () {
-          const iframeDoc = $("#preview")[0].contentDocument;
-          const bodyHtml = iframeDoc.body.innerHTML;
-          copyToClipboard(bodyHtml);
+          const { html } = extractContent();
+          showModal("HTML Content", html);
         });
 
-        // Copy JavaScript
         $("#copyJsScripts").on("click", function () {
-          const iframeDoc = $("#preview")[0].contentDocument;
-          const scripts = Array.from(iframeDoc.scripts)
-            .map((script) => script.outerHTML)
-            .join("\n");
-          copyToClipboard(scripts);
+          const { scripts } = extractContent();
+          showModal("JavaScript Content", scripts);
         });
 
-        // Copy CSS
         $("#copyCss").on("click", function () {
-          const iframeDoc = $("#preview")[0].contentDocument;
-          const styles = Array.from(iframeDoc.styleSheets)
-            .map((styleSheet) => {
-              try {
-                return Array.from(styleSheet.cssRules)
-                  .map((rule) => rule.cssText)
-                  .join("\n");
-              } catch (e) {
-                return "";
-              }
-            })
-            .join("\n");
-          copyToClipboard(styles);
+          const { styles, linkedStyles } = extractContent();
+          showModal("CSS Content", `${styles}\n\nLinked Styles:\n${linkedStyles}`);
         });
-
-        // Copy All Body Content
-        $("#copyAllBodyContent").on("click", function () {
-          const iframeDoc = $("#preview")[0].contentDocument;
-          const bodyContent = iframeDoc.body.outerHTML;
-          copyToClipboard(bodyContent);
-        });
-
-
 
         loadPreferences();
 
-
-
-        
       });
     </script>
   </body>
