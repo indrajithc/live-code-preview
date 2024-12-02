@@ -78,6 +78,7 @@
               <div
                 class="border h-100 position-relative"
                 id="preview-container"
+                style="min-height: 600px;"
               >
                 <iframe
                   id="preview"
@@ -323,7 +324,7 @@
             const html = clonedDoc.innerHTML;
  
  
-          return { html, styles, linkedStyles, scripts };
+          return { html, styles,  scripts };
         };
 
         // Function to display extracted content
@@ -347,8 +348,8 @@
         });
 
         $("#copyCss").on("click", function () {
-          const { styles, linkedStyles } = extractContent();
-          showModal("CSS Content", `${styles}\n\nLinked Styles:\n${linkedStyles}`);
+          const { styles } = extractContent();
+          showModal("CSS Content", `${styles}`);
         });
 
         loadPreferences();
